@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.core import database, models
-from app.services import hashing, vision
+from vision_app.core import database, models
+from vision_app.services import hashing, vision
 import json
 
 router = APIRouter()

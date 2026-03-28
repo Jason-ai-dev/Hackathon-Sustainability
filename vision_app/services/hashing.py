@@ -18,8 +18,9 @@ def is_duplicate(db: Session, computed_hash: str) -> bool:
     
     # Check within Hamming distance
     query_hash = imagehash.hex_to_hash(computed_hash)
-    all_hashes = db.query(models.Submission.image_hash).all()
-    for (h,) in all_hashes:
+    # Iterate over hashes in batches to avoid loading all of them into memory at once
+    query = db.query(models.Submission.image_hash).yield_per(1000)
+    for (h,) in query:
         if h:
             h_obj = imagehash.hex_to_hash(h)
             if query_hash - h_obj < HASH_TOLERANCE:

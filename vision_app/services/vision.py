@@ -49,7 +49,7 @@ def verify_recycling_image(image_bytes: bytes) -> dict:
 
     try:
         if VISION_API_KEY:
-            response = requests.post(VISION_API_URL, headers=headers, json=payload)
+            response = requests.post(VISION_API_URL, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
             data = response.json()
             return json.loads(data['choices'][0]['message']['content'])
@@ -98,7 +98,7 @@ def parse_utility_bill(image_bytes: bytes) -> dict:
     
     try:
         if VISION_API_KEY:
-            response = requests.post(VISION_API_URL, headers=headers, json=payload)
+            response = requests.post(VISION_API_URL, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
             data = response.json()
             parsed = json.loads(data['choices'][0]['message']['content'])
@@ -111,7 +111,7 @@ def parse_utility_bill(image_bytes: bytes) -> dict:
             
             return parsed
         else:
-             return {"electricity_kwh": 100.0, "water_m3": 10.0, "period_days": 30, "minimal_usage_score": True, "mock": True}
+            return {"electricity_kwh": 100.0, "water_m3": 10.0, "period_days": 30, "minimal_usage_score": True, "mock": True}
     except Exception as e:
         print(f"Vision API Error: {e}")
         return {"error": "Failed to extract bill data"}

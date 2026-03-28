@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.api import recycling, bills
-from app.core.database import engine, Base
+from vision_app.api import recycling, bills
+from vision_app.core.database import engine, Base
 
 # Create DB Tables
 Base.metadata.create_all(bind=engine)
