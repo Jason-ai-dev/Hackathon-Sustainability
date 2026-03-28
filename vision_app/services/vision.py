@@ -78,9 +78,10 @@ def parse_utility_bill(image_bytes: bytes) -> dict:
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
     
     prompt = (
-        "Extract total electricity (kWh) and water (cubic meters) usage from this bill, "
-        "along with the billing period in days. Return JSON with keys: "
-        "'electricity_kwh' (float or null), 'water_m3' (float or null), 'period_days' (int)."
+        "Extract the person's name, the total amount due from this utility bill, "
+        "determine the type of bill (e.g., 'water', 'electricity', 'gas', or 'unknown'), "
+        "and determine if the billing period is yearly. "
+        "Return strictly JSON with keys: 'name' (string or null), 'extracted_amount' (float or null), 'bill_type' (string or null), and 'is_yearly' (bool)."
     )
     
     payload = {
@@ -117,15 +118,18 @@ def parse_utility_bill(image_bytes: bytes) -> dict:
                     f"No content returned. Full response: {json.dumps(data)}")
             parsed = json.loads(message_content)
             
-            # Simple benchmark check (example: 8 kWh/day average single person UK)
-            days = parsed.get("period_days", 30) or 30
-            kwh = parsed.get("electricity_kwh")
-            if kwh is not None:
-                parsed["minimal_usage_score"] = float(kwh) / days < 8.0 # Pass if less than average
+            amount = parsed.get("extracted_amount")
+            if amount is not None:
+                if parsed.get("is_yearly", False):
+                    parsed["amount_paid"] = round(float(amount) / 12.0, 2)
+                else:
+                    parsed["amount_paid"] = float(amount)
+            else:
+                parsed["amount_paid"] = None
             
             return parsed
         else:
-            return {"electricity_kwh": 100.0, "water_m3": 10.0, "period_days": 30, "minimal_usage_score": True, "mock": True}
+            return {"name": "Mock User", "amount_paid": 45.50, "bill_type": "electricity", "mock": True}
     except Exception as e:
         error_msg = str(e)
         if isinstance(e, requests.exceptions.HTTPError) and e.response is not None:

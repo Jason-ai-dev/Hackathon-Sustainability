@@ -19,28 +19,26 @@ async def verify_bill(file: UploadFile = File(...), db: Session = Depends(databa
     if hashing.is_duplicate(db, computed_hash):
         raise HTTPException(status_code=409, detail="Duplicate bill detected.")
 
-    # Parse and metrics extraction via Vision API
+    # Parse and extract via Vision API
     vlm_result = vision.parse_utility_bill(image_bytes)
     
     if "error" in vlm_result:
         raise HTTPException(status_code=500, detail=vlm_result["error"])
-        
-    minimal_usage_score_passed = vlm_result.get("minimal_usage_score", False)
-    
+
     # 3. Store record
     submission = models.Submission(
         submission_type="bill",
         image_hash=computed_hash,
         vlm_result=json.dumps(vlm_result),
-        status="pass" if minimal_usage_score_passed else "fail"
+        status="pass"
     )
     db.add(submission)
     db.commit()
     db.refresh(submission)
 
     return {
-        "status": "success" if minimal_usage_score_passed else "failed",
-        "message": "Bill metrics show minimal usage!" if minimal_usage_score_passed else "Usage exceeds benchmarks.",
-        "metrics": vlm_result,
+        "status": "success",
+        "message": "Bill successfully parsed.",
+        "data": vlm_result,
         "submission_id": submission.id
     }
