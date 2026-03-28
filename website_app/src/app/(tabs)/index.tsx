@@ -196,15 +196,6 @@ function ScannerView({
           <Text style={styles.scanHint}>Align QR code within frame</Text>
         </View>
       </View>
-      {/* Action buttons */}
-      <View style={styles.cameraActions}>
-        <TouchableOpacity style={styles.cameraActionButton} activeOpacity={0.7}>
-          <Text style={styles.cameraActionIcon}>🔦</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cameraActionButton} activeOpacity={0.7}>
-          <Text style={styles.cameraActionIcon}>🖼️</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
