@@ -11,6 +11,9 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import axios from 'axios';
+
+const API_BASE = 'http://16.171.169.206:8080';
 
 // ─── Colors ──────────────────────────────────────────────────
 const C = {
@@ -28,12 +31,6 @@ const C = {
   inputBg: '#F5F4FA',
   danger: '#E24B4A',
 };
-
-// ─── Mock Credentials ────────────────────────────────────────
-const MOCK_USERS = [
-  { email: 'eco@test.com', password: '123456' },
-  { email: 'admin@ecoleague.com', password: 'admin' },
-];
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -57,24 +54,42 @@ export default function LoginScreen() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    try {
+      const res = await axios.post(
+        `${API_BASE}/auth/login`,
+        {
+          email: email.trim().toLowerCase(),
+          password,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000,
+        }
+      );
 
-    const user = MOCK_USERS.find(
-      (u) => u.email === email.toLowerCase().trim() && u.password === password
-    );
+      // Store the JWT token for later use
+      const token = res.data?.token || res.data?.access_token;
+      if (token) {
+        // TODO: persist token with Zustand / AsyncStorage
+        console.log('JWT received:', token);
+      }
 
-    if (user) {
       router.replace('/(tabs)/impact');
-    } else {
-      setError('Invalid email or password. Try eco@test.com / 123456');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Login failed. Please try again.';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
       setIsLoading(false);
     }
   };
 
+  // ─── Quick Login (bypass API — for demo / dev) ─────────────
   const handleQuickLogin = () => {
-    setEmail('eco@test.com');
-    setPassword('123456');
+    router.replace('/(tabs)/impact');
   };
 
   return (
@@ -178,25 +193,6 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Social Login */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-              <Text style={styles.socialIcon}>🍎</Text>
-              <Text style={styles.socialText}>Apple</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-              <Text style={styles.socialIcon}>🔵</Text>
-              <Text style={styles.socialText}>Google</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* Quick Login (for demo) */}
           <TouchableOpacity style={styles.quickLogin} onPress={handleQuickLogin}>
             <Text style={styles.quickLoginText}>
@@ -208,7 +204,7 @@ export default function LoginScreen() {
         {/* Sign Up Link */}
         <View style={styles.signupRow}>
           <Text style={styles.signupText}>Don't have an account? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/signup')}>
             <Text style={styles.signupLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>
@@ -379,49 +375,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
-  },
-
-  // Divider
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: C.border,
-  },
-  dividerText: {
-    fontSize: 13,
-    color: C.textTertiary,
-    fontWeight: '500',
-  },
-
-  // Social
-  socialRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: C.border,
-    backgroundColor: C.card,
-  },
-  socialIcon: {
-    fontSize: 18,
-  },
-  socialText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.text,
   },
 
   // Quick Login
