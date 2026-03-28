@@ -4,8 +4,10 @@ import json
 import requests
 
 # Set your API keys as needed or use local API
-VISION_API_URL = os.getenv("VISION_API_URL", "https://openrouter.ai/api/v1/chat/completions")
-VISION_API_KEY = os.getenv("VISION_API_KEY", "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")
+VISION_API_URL = os.getenv(
+    "VISION_API_URL", "https://api.openai.com/v1/chat/completions")
+VISION_API_KEY = os.getenv(
+    "VISION_API_KEY", "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")
 
 def verify_recycling_image(image_bytes: bytes) -> dict:
     '''
@@ -14,21 +16,23 @@ def verify_recycling_image(image_bytes: bytes) -> dict:
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
     
     prompt = (
-        "Identify the material (e.g., plastic, paper, glass), "
-        "verify if it is held over a UK recycling bin (blue/green/brown), "
-        "and confirm if the item has been forcibly crushed/crumpled. "
-        "Return strictly JSON with keys: 'material' (string), 'in_bin' (bool), and 'is_crushed' (bool)."
+        "Identify the primary item being thrown away and its material (e.g., plastic bottle, cardboard box, glass jar). "
+        "Also identify the main recycling or waste bin visible in the image based on its color. "
+        "Determine if the item is compatible with that specific bin according to these strict hackathon rules: "
+        "- Blue Bin: Only for cardboard. "
+        "- Cyan/Green Bin: Only for glass. "
+        "- Red Bin: Only for plastics and metal cans. "
+        "- Black Bin: For general waste. "
+        "Return strictly JSON with keys: 'item' (string), 'bin_detected' (string), 'is_compatible' (bool), and 'reason' (string explaining why)."
     )
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {VISION_API_KEY}",
-        "HTTP-Referer": "http://localhost:8000",
-        "X-OpenRouter-Title": "Sustainability Hackathon"
+        "Authorization": f"Bearer {VISION_API_KEY}"
     }
 
     payload = {
-        "model": "openai/gpt-4o",
+        "model": "gpt-4o",
         "messages": [
             {
                 "role": "user",
@@ -52,12 +56,20 @@ def verify_recycling_image(image_bytes: bytes) -> dict:
             response = requests.post(VISION_API_URL, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
             data = response.json()
-            return json.loads(data['choices'][0]['message']['content'])
+            message_content = data['choices'][0]['message']['content']
+            if message_content is None:
+                raise ValueError(
+                    f"No content returned. Full response: {json.dumps(data)}")
+            return json.loads(message_content)
         else:
-            return {"material": "unknown", "in_bin": True, "is_crushed": True, "mock": True}
+            return {"item": "unknown", "bin_detected": "unknown", "is_compatible": True, "reason": "mock", "mock": True}
     except Exception as e:
-        print(f"Vision API Error: {e}")
-        return {"error": "Failed to analyze image"}
+        error_msg = str(e)
+        # Attempt to get more info from the response if it was an HTTP error
+        if isinstance(e, requests.exceptions.HTTPError) and e.response is not None:
+            error_msg += f". Response text: {e.response.text}"
+        print(f"Vision API Error: {error_msg}")
+        return {"error": f"Failed to analyze image: {error_msg}"}
 
 def parse_utility_bill(image_bytes: bytes) -> dict:
     '''
@@ -72,7 +84,7 @@ def parse_utility_bill(image_bytes: bytes) -> dict:
     )
     
     payload = {
-        "model": "openai/gpt-4o",
+        "model": "gpt-4o",
         "messages": [
             {
                 "role": "user",
@@ -91,9 +103,7 @@ def parse_utility_bill(image_bytes: bytes) -> dict:
     
     headers = {
         "Content-Type": "application/json",
-         "Authorization": f"Bearer {VISION_API_KEY}",
-         "HTTP-Referer": "http://localhost:8000",
-         "X-OpenRouter-Title": "Sustainability Hackathon"
+        "Authorization": f"Bearer {VISION_API_KEY}"
     }
     
     try:
@@ -101,7 +111,11 @@ def parse_utility_bill(image_bytes: bytes) -> dict:
             response = requests.post(VISION_API_URL, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
             data = response.json()
-            parsed = json.loads(data['choices'][0]['message']['content'])
+            message_content = data['choices'][0]['message']['content']
+            if message_content is None:
+                raise ValueError(
+                    f"No content returned. Full response: {json.dumps(data)}")
+            parsed = json.loads(message_content)
             
             # Simple benchmark check (example: 8 kWh/day average single person UK)
             days = parsed.get("period_days", 30) or 30
@@ -113,5 +127,8 @@ def parse_utility_bill(image_bytes: bytes) -> dict:
         else:
             return {"electricity_kwh": 100.0, "water_m3": 10.0, "period_days": 30, "minimal_usage_score": True, "mock": True}
     except Exception as e:
-        print(f"Vision API Error: {e}")
-        return {"error": "Failed to extract bill data"}
+        error_msg = str(e)
+        if isinstance(e, requests.exceptions.HTTPError) and e.response is not None:
+            error_msg += f". Response text: {e.response.text}"
+        print(f"Vision API Error: {error_msg}")
+        return {"error": f"Failed to extract bill data: {error_msg}"}

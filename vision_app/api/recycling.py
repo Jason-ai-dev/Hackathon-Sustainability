@@ -28,12 +28,13 @@ async def verify_recycling(file: UploadFile = File(...), db: Session = Depends(d
         raise HTTPException(status_code=500, detail=vlm_result["error"])
 
     # Extract conditions
-    material = vlm_result.get("material", "unknown")
-    in_bin = vlm_result.get("in_bin", False)
-    is_crushed = vlm_result.get("is_crushed", False)
+    item = vlm_result.get("item", "unknown")
+    bin_detected = vlm_result.get("bin_detected", "unknown")
+    is_compatible = vlm_result.get("is_compatible", False)
+    reason = vlm_result.get("reason", "")
 
     # Simple logic
-    passed = in_bin and is_crushed
+    passed = is_compatible
 
     # 3. Store submission record
     submission = models.Submission(
@@ -48,7 +49,7 @@ async def verify_recycling(file: UploadFile = File(...), db: Session = Depends(d
     
     return {
         "status": "success" if passed else "failed",
-        "message": "Recycling verified!" if passed else "Failed: Ensure item is crushed and in the bin.",
+        "message": "Recycling verified! Action approved." if passed else f"Action denied: {reason}",
         "details": vlm_result,
         "submission_id": submission.id
     }

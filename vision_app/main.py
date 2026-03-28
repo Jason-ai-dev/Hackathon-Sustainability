@@ -17,3 +17,8 @@ app.include_router(bills.router, prefix="/api", tags=["bills"])
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the AI Sustainability API. Visit /docs for Swagger UI."}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
