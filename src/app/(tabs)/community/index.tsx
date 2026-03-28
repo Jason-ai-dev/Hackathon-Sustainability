@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ScrollView,
@@ -197,8 +198,10 @@ function SectionHeader({
 
 function LeaderboardRow({
   item,
+  onPress,
 }: {
   item: (typeof FRIENDS)[0];
+  onPress: () => void;
 }) {
   return (
     <TouchableOpacity
@@ -207,6 +210,7 @@ function LeaderboardRow({
         item.isYou && styles.leaderboardRowYou,
       ]}
       activeOpacity={0.7}
+      onPress={onPress}
     >
       <Text style={[styles.rankText, item.isYou && styles.rankTextYou]}>
         {item.rank}
@@ -414,6 +418,7 @@ function RivalAlertBanner() {
 // ─── Main Screen ─────────────────────────────────────────────
 
 export default function CommunityScreen() {
+  const router = useRouter();
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
@@ -435,7 +440,14 @@ export default function CommunityScreen() {
         <View style={styles.leaderboardCard}>
           {FRIENDS.map((friend, index) => (
             <React.Fragment key={friend.rank}>
-              <LeaderboardRow item={friend} />
+              <LeaderboardRow
+                item={friend}
+                onPress={() => {
+                  if (!friend.isYou) {
+                    router.push(`/community/friend-profile?rank=${friend.rank}`);
+                  }
+                }}
+              />
               {index < FRIENDS.length - 1 && !friend.isYou && !FRIENDS[index + 1]?.isYou && (
                 <View style={styles.leaderboardDivider} />
               )}
