@@ -176,9 +176,7 @@ function TierProgressCard() {
         <Text style={[styles.tierLabelText, { color: C.gold }]}>GOLD</Text>
         <Text style={[styles.tierLabelText, { color: C.primary }]}>DIAMOND</Text>
       </View>
-      <TouchableOpacity style={styles.boostButton}>
-        <Text style={styles.boostButtonText}>Boost Your Progress</Text>
-      </TouchableOpacity>
+      
     </View>
   );
 }

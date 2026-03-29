@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 
-const API_BASE = 'http://16.171.169.206:8080';
+const API_BASE = 'http://susapp-alb-1771842614.eu-north-1.elb.amazonaws.com';
 
 // ─── Colors ──────────────────────────────────────────────────
 const C = {

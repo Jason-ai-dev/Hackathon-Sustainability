@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ScrollView,
@@ -7,7 +8,45 @@ import {
   View
 } from 'react-native';
 
-// ─── Mock Data ───────────────────────────────────────────────
+// ─── Rewards Data (from CSV) ────────────────────────────────
+const REWARDS = [
+  { id: '1', category: 'Zero-Waste Home', slug: 'home', shop: 'GreenWrap Co.', name: 'Beeswax Wrap Set', desc: 'Pack of 3 reusable beeswax wraps — replaces cling film for food storage', points: 120, icon: '🐝', catColor: '#0F6E56', catBg: '#E1F5EE', featured: true, stock: 'in_stock' },
+  { id: '2', category: 'Zero-Waste Home', slug: 'home', shop: 'GreenWrap Co.', name: 'Silicone Food Storage Kit', desc: 'Set of 4 leak-proof reusable silicone bags for meal prep and snacks', points: 250, icon: '🍱', catColor: '#0F6E56', catBg: '#E1F5EE', featured: false, stock: 'in_stock' },
+  { id: '3', category: 'Zero-Waste Home', slug: 'home', shop: 'EarthScrub', name: 'Compostable Kitchen Kit', desc: 'Loofah sponge duo and bamboo dish brush — fully biodegradable', points: 80, icon: '🧽', catColor: '#0F6E56', catBg: '#E1F5EE', featured: false, stock: 'in_stock' },
+  { id: '4', category: 'Zero-Waste Home', slug: 'home', shop: 'SipClean', name: 'Steel Straw Set', desc: '4 stainless steel straws with cleaning brush and canvas travel pouch', points: 60, icon: '🥤', catColor: '#0F6E56', catBg: '#E1F5EE', featured: true, stock: 'in_stock' },
+  { id: '5', category: 'Personal Care', slug: 'beauty', shop: 'BarNone Beauty', name: 'Shampoo Bar', desc: 'Solid lavender-mint shampoo bar — lasts 80 washes and zero plastic', points: 90, icon: '🧴', catColor: '#993556', catBg: '#FBEAF0', featured: true, stock: 'in_stock' },
+  { id: '6', category: 'Personal Care', slug: 'beauty', shop: 'BarNone Beauty', name: 'Conditioner Bar', desc: 'Solid argan oil conditioner bar — plastic-free and travel-friendly', points: 90, icon: '💆', catColor: '#993556', catBg: '#FBEAF0', featured: false, stock: 'in_stock' },
+  { id: '7', category: 'Personal Care', slug: 'beauty', shop: 'BarNone Beauty', name: 'Body Wash Bar', desc: 'Solid citrus body wash bar — replaces 3 plastic bottles', points: 85, icon: '🫧', catColor: '#993556', catBg: '#FBEAF0', featured: false, stock: 'in_stock' },
+  { id: '8', category: 'Personal Care', slug: 'beauty', shop: 'BambooBright', name: 'Bamboo Dental Kit', desc: 'Bamboo toothbrush and silk dental floss in a glass vial', points: 70, icon: '🪥', catColor: '#993556', catBg: '#FBEAF0', featured: false, stock: 'in_stock' },
+  { id: '9', category: 'Personal Care', slug: 'beauty', shop: 'ReScent', name: 'Refillable Deodorant', desc: 'Stainless steel case with 2 compostable lavender refill cartridges', points: 200, icon: '🧊', catColor: '#993556', catBg: '#FBEAF0', featured: true, stock: 'in_stock' },
+  { id: '10', category: 'Personal Care', slug: 'beauty', shop: 'EdgeEver', name: 'Safety Razor', desc: 'Chrome-finish metal safety razor with 10 replacement blades', points: 350, icon: '🪒', catColor: '#993556', catBg: '#FBEAF0', featured: false, stock: 'limited' },
+  { id: '11', category: 'Sustainable Tech', slug: 'tech', shop: 'Pela Case', name: 'Plant-Based Phone Case', desc: 'Compostable phone case made from flax straw — fits iPhone and Samsung', points: 180, icon: '📱', catColor: '#185FA5', catBg: '#E6F1FB', featured: true, stock: 'in_stock' },
+  { id: '12', category: 'Sustainable Tech', slug: 'tech', shop: 'SunBank', name: 'Solar Power Bank', desc: '5000mAh solar-powered portable charger — charge anywhere outdoors', points: 800, icon: '☀️', catColor: '#185FA5', catBg: '#E6F1FB', featured: true, stock: 'limited' },
+  { id: '13', category: 'Sustainable Tech', slug: 'tech', shop: 'OceanCable', name: 'Ocean Plastic Cable', desc: '1.5m braided USB-C cable made from reclaimed fishing nets', points: 150, icon: '🔌', catColor: '#185FA5', catBg: '#E6F1FB', featured: false, stock: 'in_stock' },
+  { id: '14', category: 'Circular Fashion', slug: 'fashion', shop: 'ThreadAgain', name: 'Organic Cotton Tote', desc: 'Heavy-duty organic cotton grocery tote — reinforced handles', points: 100, icon: '👜', catColor: '#854F0B', catBg: '#FAEEDA', featured: true, stock: 'in_stock' },
+  { id: '15', category: 'Circular Fashion', slug: 'fashion', shop: 'ReMade Goods', name: 'Upcycled Wallet', desc: 'Slim wallet handmade from reclaimed truck tarp — each one is unique', points: 450, icon: '👛', catColor: '#854F0B', catBg: '#FAEEDA', featured: false, stock: 'limited' },
+  { id: '16', category: 'Circular Fashion', slug: 'fashion', shop: 'ReMade Goods', name: 'Fire Hose Messenger Bag', desc: 'Crossbody bag crafted from decommissioned fire hoses', points: 900, icon: '🎒', catColor: '#854F0B', catBg: '#FAEEDA', featured: false, stock: 'limited' },
+  { id: '17', category: 'Circular Fashion', slug: 'fashion', shop: 'LoopThreads', name: 'Recycled Polyester Socks', desc: '3-pack athletic socks made from 12 recycled plastic bottles', points: 75, icon: '🧦', catColor: '#854F0B', catBg: '#FAEEDA', featured: false, stock: 'in_stock' },
+  { id: '18', category: 'Circular Fashion', slug: 'fashion', shop: 'LoopThreads', name: 'Recycled Headband', desc: 'Moisture-wicking workout headband made from ocean-bound plastic', points: 50, icon: '🏃', catColor: '#854F0B', catBg: '#FAEEDA', featured: false, stock: 'in_stock' },
+  { id: '19', category: 'Digital & Experiences', slug: 'digital', shop: 'OneTreePlanted', name: 'Plant a Tree', desc: 'Fund one tree planted in a reforestation project — certificate included', points: 30, icon: '🌱', catColor: '#3C3489', catBg: '#EEEDFE', featured: true, stock: 'in_stock' },
+  { id: '20', category: 'Digital & Experiences', slug: 'digital', shop: 'OneTreePlanted', name: 'Plant a Forest (10 Trees)', desc: 'Fund 10 trees in a global reforestation project — named grove', points: 250, icon: '🌲', catColor: '#3C3489', catBg: '#EEEDFE', featured: false, stock: 'in_stock' },
+  { id: '21', category: 'Digital & Experiences', slug: 'digital', shop: 'Bath Botanical Gardens', name: 'Botanical Garden Day Pass', desc: 'Free entry for one to the local botanical gardens', points: 150, icon: '🌺', catColor: '#3C3489', catBg: '#EEEDFE', featured: true, stock: 'in_stock' },
+  { id: '22', category: 'Digital & Experiences', slug: 'digital', shop: 'National Trust', name: 'National Park Weekend Pass', desc: 'Weekend entry pass for any local national park or nature reserve', points: 400, icon: '🏞️', catColor: '#3C3489', catBg: '#EEEDFE', featured: false, stock: 'limited' },
+  { id: '23', category: 'Digital & Experiences', slug: 'digital', shop: 'GreenSkills Academy', name: 'Urban Gardening Masterclass', desc: '90-min digital course on growing herbs and vegetables in small spaces', points: 120, icon: '🌿', catColor: '#3C3489', catBg: '#EEEDFE', featured: false, stock: 'in_stock' },
+  { id: '24', category: 'Digital & Experiences', slug: 'digital', shop: 'GreenSkills Academy', name: 'Composting 101 Course', desc: 'Self-paced digital course on home composting techniques', points: 100, icon: '🪱', catColor: '#3C3489', catBg: '#EEEDFE', featured: false, stock: 'in_stock' },
+  { id: '25', category: 'Digital & Experiences', slug: 'digital', shop: 'GreenSkills Academy', name: 'Clothes Mending Workshop', desc: 'Live online workshop on visible mending and upcycling old garments', points: 180, icon: '🧵', catColor: '#3C3489', catBg: '#EEEDFE', featured: false, stock: 'in_stock' },
+];
+
+const CATEGORIES = [
+  { label: 'All', slug: 'all' },
+  { label: 'Home', slug: 'home' },
+  { label: 'Care', slug: 'beauty' },
+  { label: 'Tech', slug: 'tech' },
+  { label: 'Fashion', slug: 'fashion' },
+  { label: 'Digital', slug: 'digital' },
+];
+
+// ─── Other Mock Data ────────────────────────────────────────
 const BALANCE = {
   available: 2280,
   nextTier: 'Diamond',
@@ -21,50 +60,9 @@ const RIVAL_NUDGE = {
   action: 'Earn 170 pts now to reclaim 1st place.',
 };
 
-const FILTERS = ['All Filters', 'Cafe', 'Services', 'Travel', 'Gear'];
-
-const REWARDS = [
-  {
-    id: '1',
-    title: 'Free Espresso',
-    category: 'Cafe',
-    categoryColor: '#8B6914',
-    categoryBg: '#FFF3DB',
-    points: 50,
-    image: '☕',
-  },
-  {
-    id: '2',
-    title: 'Priority Credits',
-    category: 'Services',
-    categoryColor: '#3C3489',
-    categoryBg: '#EEEDFE',
-    points: 200,
-    image: '🖨️',
-  },
-  {
-    id: '3',
-    title: 'Bus Fast Pass',
-    category: 'Travel',
-    categoryColor: '#0F6E56',
-    categoryBg: '#E1F5EE',
-    points: 1200,
-    image: '🚌',
-  },
-  {
-    id: '4',
-    title: 'Eco-Tote Bag',
-    category: 'Gear',
-    categoryColor: '#185FA5',
-    categoryBg: '#E6F1FB',
-    points: 850,
-    image: '👜',
-  },
-];
-
 const HISTORY = [
-  { id: '1', title: 'Free Espresso', time: 'TODAY, 09:15', points: -50, icon: '☕' },
-  { id: '2', title: 'Printing Credits', time: 'YESTERDAY', points: -200, icon: '🖨️' },
+  { id: '1', title: 'Beeswax Wrap Set', time: 'TODAY, 09:15', points: -120, icon: '🐝' },
+  { id: '2', title: 'Plant a Tree', time: 'YESTERDAY', points: -30, icon: '🌱' },
   { id: '3', title: 'Verification Bonus', time: '2 DAYS AGO', points: 50, icon: '✅' },
 ];
 
@@ -87,9 +85,6 @@ const C = {
 // ─── Sub-Components ──────────────────────────────────────────
 
 function BalanceCard() {
-  const progress =
-    ((10000 - BALANCE.pointsToNextTier) / 10000) * 100;
-
   return (
     <View style={styles.balanceCard}>
       <View style={styles.balanceTop}>
@@ -108,7 +103,7 @@ function BalanceCard() {
       </View>
       <View style={styles.tierProgressRow}>
         <View style={styles.tierDots}>
-          {BALANCE.tiers.map((t, i) => (
+          {BALANCE.tiers.map((t) => (
             <View key={t} style={styles.tierDot}>
               <Text style={styles.tierDotText}>{t}</Text>
             </View>
@@ -166,7 +161,7 @@ function FilterChips({
   onSelect,
 }: {
   active: string;
-  onSelect: (f: string) => void;
+  onSelect: (slug: string) => void;
 }) {
   return (
     <ScrollView
@@ -174,23 +169,23 @@ function FilterChips({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.filterRow}
     >
-      {FILTERS.map((f) => {
-        const isActive = f === active;
+      {CATEGORIES.map((cat) => {
+        const isActive = cat.slug === active;
         return (
           <TouchableOpacity
-            key={f}
+            key={cat.slug}
             style={[styles.filterChip, isActive && styles.filterChipActive]}
-            onPress={() => onSelect(f)}
+            onPress={() => onSelect(cat.slug)}
             activeOpacity={0.7}
           >
-            {f === 'All Filters' && <Text style={styles.filterIcon}>🏷️</Text>}
+            {cat.slug === 'all' && <Text style={styles.filterIcon}>🏷️</Text>}
             <Text
               style={[
                 styles.filterChipText,
                 isActive && styles.filterChipTextActive,
               ]}
             >
-              {f}
+              {cat.label}
             </Text>
           </TouchableOpacity>
         );
@@ -204,19 +199,25 @@ function RewardCard({
 }: {
   item: (typeof REWARDS)[0];
 }) {
+  const isLimited = item.stock === 'limited';
+
   return (
     <View style={styles.rewardCard}>
-      <View style={styles.rewardImageBox}>
-        <Text style={styles.rewardEmoji}>{item.image}</Text>
-        <View
-          style={[styles.categoryBadge, { backgroundColor: item.categoryBg }]}
-        >
-          <Text style={[styles.categoryText, { color: item.categoryColor }]}>
+      <View style={[styles.rewardImageBox, { backgroundColor: item.catBg }]}>
+        <Text style={styles.rewardEmoji}>{item.icon}</Text>
+        <View style={[styles.categoryBadge, { backgroundColor: item.catBg }]}>
+          <Text style={[styles.categoryText, { color: item.catColor }]}>
             {item.category}
           </Text>
         </View>
+        {isLimited && (
+          <View style={styles.limitedBadge}>
+            <Text style={styles.limitedText}>Limited</Text>
+          </View>
+        )}
       </View>
-      <Text style={styles.rewardTitle}>{item.title}</Text>
+      <Text style={styles.rewardTitle} numberOfLines={1}>{item.name}</Text>
+      <Text style={styles.rewardShop} numberOfLines={1}>{item.shop}</Text>
       <View style={styles.rewardBottom}>
         <View style={styles.rewardPointsRow}>
           <Text style={styles.rewardBolt}>⚡</Text>
@@ -281,7 +282,18 @@ function PromoBanner() {
 // ─── Main Screen ─────────────────────────────────────────────
 
 export default function ShopScreen() {
-  const [activeFilter, setActiveFilter] = useState('All Filters');
+  const router = useRouter();
+  const [activeFilter, setActiveFilter] = useState('all');
+
+  const filteredRewards = activeFilter === 'all'
+    ? REWARDS
+    : REWARDS.filter((r) => r.slug === activeFilter);
+
+  // Show featured first, then others — cap at 6 for the preview
+  const previewRewards = [
+    ...filteredRewards.filter((r) => r.featured),
+    ...filteredRewards.filter((r) => !r.featured),
+  ].slice(0, 6);
 
   return (
     <View style={styles.screen}>
@@ -307,14 +319,44 @@ export default function ShopScreen() {
         {/* Rival Nudge */}
         <RivalNudge />
 
-        {/* Trending Rewards */}
-        <SectionHeader title="Trending Rewards" linkText="All Filters" />
+        {/* Rewards Section */}
+        <SectionHeader
+          title="Rewards"
+          linkText="View All"
+          onLinkPress={() => router.push('/shop/all-rewards')}
+        />
         <FilterChips active={activeFilter} onSelect={setActiveFilter} />
 
-        <View style={styles.rewardsGrid}>
-          {REWARDS.map((reward) => (
-            <RewardCard key={reward.id} item={reward} />
-          ))}
+        {/* Fixed-height scrollable rewards preview */}
+        <View style={styles.rewardsContainer}>
+          <ScrollView
+            nestedScrollEnabled
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={styles.rewardsScrollContent}
+          >
+            <View style={styles.rewardsGrid}>
+              {previewRewards.map((reward) => (
+                <RewardCard key={reward.id} item={reward} />
+              ))}
+            </View>
+            {filteredRewards.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyIcon}>🔍</Text>
+                <Text style={styles.emptyText}>No rewards in this category yet</Text>
+              </View>
+            )}
+          </ScrollView>
+          {filteredRewards.length > 6 && (
+            <TouchableOpacity
+              style={styles.seeMoreBar}
+              onPress={() => router.push('/shop/all-rewards')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.seeMoreText}>
+                +{filteredRewards.length - 6} more — View All
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Recent History */}
@@ -564,54 +606,94 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Rewards Grid
+  // Rewards Container (fixed height)
+  rewardsContainer: {
+    height: 460,
+    backgroundColor: C.card,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  rewardsScrollContent: {
+    padding: 12,
+  },
   rewardsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
   },
-  rewardCard: {
-    width: '48%',
-    flexGrow: 1,
+  seeMoreBar: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: C.border,
     backgroundColor: C.card,
+  },
+  seeMoreText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: C.primary,
+  },
+  rewardCard: {
+    width: '47%',
+    flexGrow: 1,
+    backgroundColor: C.bg,
     borderRadius: 14,
     overflow: 'hidden',
   },
   rewardImageBox: {
-    height: 120,
-    backgroundColor: '#F5F3FF',
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   rewardEmoji: {
-    fontSize: 48,
+    fontSize: 40,
   },
   categoryBadge: {
     position: 'absolute',
-    top: 10,
-    left: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+    top: 8,
+    left: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   categoryText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
   },
+  limitedBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  limitedText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: C.danger,
+  },
   rewardTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: C.text,
-    paddingHorizontal: 12,
-    paddingTop: 10,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+  },
+  rewardShop: {
+    fontSize: 11,
+    color: C.textTertiary,
+    paddingHorizontal: 10,
+    marginTop: 2,
   },
   rewardBottom: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
-    paddingTop: 8,
+    padding: 10,
+    paddingTop: 6,
   },
   rewardPointsRow: {
     flexDirection: 'row',
@@ -619,24 +701,38 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   rewardBolt: {
-    fontSize: 13,
+    fontSize: 12,
     color: C.primary,
   },
   rewardPoints: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: C.text,
   },
   redeemButton: {
     backgroundColor: C.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
   },
   redeemButtonText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+
+  // Empty state
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    gap: 8,
+  },
+  emptyIcon: {
+    fontSize: 36,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: C.textSecondary,
   },
 
   // History

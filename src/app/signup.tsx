@@ -45,7 +45,7 @@ const COUNTRY_CODES = [
   { code: '+33', flag: '🇫🇷', label: 'FR' },
 ];
 
-const API_BASE = 'http://16.171.169.206:8080';
+const API_BASE = 'http://susapp-alb-1771842614.eu-north-1.elb.amazonaws.com';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -82,7 +82,7 @@ export default function SignupScreen() {
       username: username.trim().toLowerCase(),
       email: email.trim().toLowerCase(),
       password,
-      country_code: selectedCountry.code,
+      countryCode: selectedCountry.code,
       phone: phone.trim(),
     };
 
