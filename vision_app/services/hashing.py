@@ -14,8 +14,7 @@ def is_duplicate(db: Session, computed_hash: str) -> bool:
     # Basic check against exact matches first to save processing
     existing = db.query(models.Submission).filter(models.Submission.image_hash == computed_hash).first()
     if existing:
-        # return True
-        pass
+        return True
     
     # Check within Hamming distance
     query_hash = imagehash.hex_to_hash(computed_hash)
@@ -25,7 +24,6 @@ def is_duplicate(db: Session, computed_hash: str) -> bool:
         if h:
             h_obj = imagehash.hex_to_hash(h)
             if query_hash - h_obj < HASH_TOLERANCE:
-                # return True
-                pass
+                return True
     
-    # return False
+    return False
