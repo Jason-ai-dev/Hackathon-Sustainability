@@ -13,11 +13,9 @@ async def verify_bill(file: UploadFile = File(...), db: Session = Depends(databa
         raise HTTPException(status_code=400, detail="File must be an image for processing.")
         
     image_bytes = await file.read()
-    
-    # Optional Duplicate check
+
+    # Generate hash for database record, but skip duplication check for bills
     computed_hash = hashing.compute_hash(image_bytes)
-    if hashing.is_duplicate(db, computed_hash):
-        raise HTTPException(status_code=409, detail="Duplicate bill detected.")
 
     # Parse and extract via Vision API
     vlm_result = vision.parse_utility_bill(image_bytes)
