@@ -7,7 +7,7 @@ import requests
 VISION_API_URL = os.getenv(
     "VISION_API_URL", "https://api.openai.com/v1/chat/completions")
 VISION_API_KEY = os.getenv(
-    "VISION_API_KEY", "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")
+    "VISION_API_KEY", "")
 
 def verify_recycling_image(image_bytes: bytes) -> dict:
     '''
