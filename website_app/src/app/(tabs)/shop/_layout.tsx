@@ -1,12 +1,11 @@
 import { Stack } from 'expo-router';
 import React from 'react';
 
-export default function CommunityLayout() {
+export default function ShopLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="friend-profile" />
-      <Stack.Screen name="all-friends" />
+      <Stack.Screen name="all-rewards" />
     </Stack>
   );
 }
