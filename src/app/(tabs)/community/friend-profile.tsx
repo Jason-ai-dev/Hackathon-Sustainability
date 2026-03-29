@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 
 // ─── Mock Friend Data ────────────────────────────────────────
+type Badge = { id: string; icon: string; name: string; progress: string; earned: boolean };
+
 const FRIEND_DATA: Record<string, {
   name: string;
   tier: string;
@@ -17,10 +19,7 @@ const FRIEND_DATA: Record<string, {
   availablePoints: number;
   lifetimePoints: number;
   rank: number;
-  co2: number;
-  water: number;
-  trees: number;
-  efficiency: number;
+  badges: Badge[];
   recentActions: { title: string; time: string; points: number; icon: string }[];
 }> = {
   '12': {
@@ -31,10 +30,13 @@ const FRIEND_DATA: Record<string, {
     availablePoints: 2450,
     lifetimePoints: 14200,
     rank: 12,
-    co2: 15.2,
-    water: 520,
-    trees: 4.1,
-    efficiency: 89,
+    badges: [
+      { id: '1', icon: '🔥', name: 'Login Streak', progress: '12 days', earned: true },
+      { id: '2', icon: '🧴', name: 'Bottles Recycled', progress: '40 bottles', earned: true },
+      { id: '3', icon: '🚲', name: 'Bike Commuter', progress: '15 rides', earned: true },
+      { id: '4', icon: '👕', name: 'Clothing Donated', progress: '2/5 items', earned: false },
+      { id: '5', icon: '🎓', name: 'Talks Attended', progress: '1/3 talks', earned: false },
+    ],
     recentActions: [
       { title: 'Recycled Aluminium Cans', time: 'Today, 10:30 AM', points: 60, icon: '♻️' },
       { title: 'Bike to Campus', time: 'Today, 8:15 AM', points: 40, icon: '🚲' },
@@ -49,10 +51,12 @@ const FRIEND_DATA: Record<string, {
     availablePoints: 2320,
     lifetimePoints: 11800,
     rank: 13,
-    co2: 11.8,
-    water: 410,
-    trees: 3.0,
-    efficiency: 82,
+    badges: [
+      { id: '1', icon: '🔥', name: 'Login Streak', progress: '5 days', earned: true },
+      { id: '2', icon: '🧴', name: 'Bottles Recycled', progress: '18 bottles', earned: true },
+      { id: '3', icon: '🥗', name: 'Meat-free Meals', progress: '20 meals', earned: true },
+      { id: '4', icon: '👕', name: 'Clothing Donated', progress: '3/5 items', earned: false },
+    ],
     recentActions: [
       { title: 'Donated Old Textbooks', time: 'Today, 11:00 AM', points: 80, icon: '📚' },
       { title: 'Meat-free Lunch', time: 'Yesterday, 12:45 PM', points: 50, icon: '🥗' },
@@ -67,10 +71,11 @@ const FRIEND_DATA: Record<string, {
     availablePoints: 2150,
     lifetimePoints: 9600,
     rank: 15,
-    co2: 9.4,
-    water: 340,
-    trees: 2.5,
-    efficiency: 76,
+    badges: [
+      { id: '1', icon: '🔥', name: 'Login Streak', progress: '3 days', earned: true },
+      { id: '2', icon: '🧴', name: 'Bottles Recycled', progress: '8/25 bottles', earned: false },
+      { id: '3', icon: '🚲', name: 'Bike Commuter', progress: '10 rides', earned: true },
+    ],
     recentActions: [
       { title: 'Campus Clean-up', time: 'Today, 2:00 PM', points: 100, icon: '🧹' },
       { title: 'Recycled Paper', time: 'Yesterday, 4:30 PM', points: 30, icon: '📄' },
@@ -84,10 +89,12 @@ const FRIEND_DATA: Record<string, {
     availablePoints: 2040,
     lifetimePoints: 8900,
     rank: 16,
-    co2: 8.7,
-    water: 290,
-    trees: 2.1,
-    efficiency: 71,
+    badges: [
+      { id: '1', icon: '🔥', name: 'Login Streak', progress: '9 days', earned: true },
+      { id: '2', icon: '👕', name: 'Clothing Donated', progress: '8 items', earned: true },
+      { id: '3', icon: '🎓', name: 'Talks Attended', progress: '5 talks', earned: true },
+      { id: '4', icon: '🧴', name: 'Bottles Recycled', progress: '12/25 bottles', earned: false },
+    ],
     recentActions: [
       { title: 'Thrift Store Donation', time: 'Today, 9:45 AM', points: 70, icon: '👕' },
       { title: 'Reusable Bag at Shop', time: 'Yesterday, 6:00 PM', points: 20, icon: '👜' },
@@ -112,17 +119,14 @@ const C = {
 
 // ─── Sub-Components ──────────────────────────────────────────
 
-function ImpactCard({ value, unit, label, icon }: {
-  value: number; unit: string; label: string; icon: string;
-}) {
+function BadgeCard({ badge }: { badge: Badge }) {
   return (
-    <View style={styles.impactCard}>
-      <Text style={styles.impactIcon}>{icon}</Text>
-      <View style={styles.impactValueRow}>
-        <Text style={styles.impactValue}>{value}</Text>
-        <Text style={styles.impactUnit}> {unit}</Text>
-      </View>
-      <Text style={styles.impactLabel}>{label}</Text>
+    <View style={[styles.badgeCard, !badge.earned && styles.badgeCardLocked]}>
+      <Text style={styles.badgeIcon}>{badge.icon}</Text>
+      {!badge.earned && <Text style={styles.badgeLock}>🔒</Text>}
+      <Text style={styles.badgeName}>{badge.name}</Text>
+      <Text style={styles.badgeProgress}>{badge.progress}</Text>
+      {badge.earned && <Text style={styles.badgeCheck}>✅</Text>}
     </View>
   );
 }
@@ -224,17 +228,20 @@ export default function FriendProfileScreen() {
           </View>
         </View>
 
-        {/* Impact Metrics */}
+        {/* Badges */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionIcon}>🌱</Text>
-          <Text style={styles.sectionTitle}>Their Real Impact</Text>
+          <Text style={styles.sectionIcon}>🏅</Text>
+          <Text style={styles.sectionTitle}>Their Badges</Text>
         </View>
-        <View style={styles.impactGrid}>
-          <ImpactCard value={friend.co2} unit="KG" label="CO2 Saved" icon="🌿" />
-          <ImpactCard value={friend.water} unit="L" label="Water Conserved" icon="💧" />
-          <ImpactCard value={friend.trees} unit="UNIT" label="Tree Equivalent" icon="🌳" />
-          <ImpactCard value={friend.efficiency} unit="%" label="Campus Efficiency" icon="📊" />
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.badgeScroll}
+        >
+          {friend.badges.map((badge) => (
+            <BadgeCard key={badge.id} badge={badge} />
+          ))}
+        </ScrollView>
 
         {/* Compare Banner */}
         <View style={styles.compareBanner}>
@@ -421,40 +428,44 @@ const styles = StyleSheet.create({
     color: C.text,
   },
 
-  // Impact Grid
-  impactGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  // Badges
+  badgeScroll: {
     gap: 12,
+    paddingRight: 4,
   },
-  impactCard: {
-    width: '48%',
-    flexGrow: 1,
+  badgeCard: {
+    width: 104,
     backgroundColor: C.card,
     borderRadius: 14,
-    padding: 16,
+    padding: 14,
+    alignItems: 'center',
     gap: 6,
   },
-  impactIcon: {
-    fontSize: 20,
+  badgeCardLocked: {
+    opacity: 0.4,
   },
-  impactValueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+  badgeIcon: {
+    fontSize: 28,
   },
-  impactValue: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: C.text,
-  },
-  impactUnit: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: C.textSecondary,
-  },
-  impactLabel: {
+  badgeLock: {
     fontSize: 12,
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  badgeName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: C.text,
+    textAlign: 'center',
+  },
+  badgeProgress: {
+    fontSize: 11,
     color: C.textSecondary,
+    textAlign: 'center',
+  },
+  badgeCheck: {
+    fontSize: 12,
   },
 
   // Compare Banner

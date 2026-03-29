@@ -1,10 +1,11 @@
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 
 // ─── Mock Data ───────────────────────────────────────────────
@@ -21,12 +22,14 @@ const USER = {
   buildingPercentile: 92,
 };
 
-const IMPACT = {
-  co2: { value: 12.5, unit: 'KG', label: 'CO2 Emissions Saved', icon: '🌿' },
-  water: { value: 450, unit: 'L', label: 'Water Conserved', icon: '💧' },
-  trees: { value: 3.2, unit: 'UNIT', label: 'Tree Equivalent', icon: '🌳' },
-  efficiency: { value: 84, unit: '%', label: 'Campus Efficiency', icon: '📊' },
-};
+const BADGES = [
+  { id: '1', icon: '🔥', name: 'Login Streak', progress: '7 days', earned: true },
+  { id: '2', icon: '🧴', name: 'Bottles Recycled', progress: '25 bottles', earned: true },
+  { id: '3', icon: '👕', name: 'Clothing Donated', progress: '5 items', earned: true },
+  { id: '4', icon: '🎓', name: 'Talks Attended', progress: '3 talks', earned: true },
+  { id: '5', icon: '🚲', name: 'Bike Commuter', progress: '6/10 rides', earned: false },
+  { id: '6', icon: '🥗', name: 'Meat-free Meals', progress: '9/15 meals', earned: false },
+];
 
 const RECENT_ACTIONS = [
   { id: '1', title: 'Recycled PET Bottles', time: 'Today, 2:45 PM', points: 50, icon: '♻️' },
@@ -134,19 +137,18 @@ function SectionHeader({
   );
 }
 
-function ImpactCard({
-  item,
+function BadgeCard({
+  badge,
 }: {
-  item: { value: number; unit: string; label: string; icon: string };
+  badge: { id: string; icon: string; name: string; progress: string; earned: boolean };
 }) {
   return (
-    <View style={styles.impactCard}>
-      <Text style={styles.impactIcon}>{item.icon}</Text>
-      <View style={styles.impactValueRow}>
-        <Text style={styles.impactValue}>{item.value}</Text>
-        <Text style={styles.impactUnit}> {item.unit}</Text>
-      </View>
-      <Text style={styles.impactLabel}>{item.label}</Text>
+    <View style={[styles.badgeCard, !badge.earned && styles.badgeCardLocked]}>
+      <Text style={styles.badgeIcon}>{badge.icon}</Text>
+      {!badge.earned && <Text style={styles.badgeLock}>🔒</Text>}
+      <Text style={styles.badgeName}>{badge.name}</Text>
+      <Text style={styles.badgeProgress}>{badge.progress}</Text>
+      {badge.earned && <Text style={styles.badgeCheck}>✅</Text>}
     </View>
   );
 }
@@ -203,6 +205,7 @@ function ActionItem({
 // ─── Main Screen ─────────────────────────────────────────────
 
 export default function ImpactScreen() {
+  const router = useRouter();
   return (
     <View style={styles.screen}>
       {/* Header */}
@@ -211,7 +214,7 @@ export default function ImpactScreen() {
           <Text style={styles.headerIcon}>⚡</Text>
           <Text style={styles.headerTitle}>Impact Dashboard</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/impact/settings')}>
           <Text style={styles.headerAction}>⚙️</Text>
         </TouchableOpacity>
       </View>
@@ -227,14 +230,17 @@ export default function ImpactScreen() {
         {/* Points */}
         <PointsCard />
 
-        {/* Impact Metrics */}
-        <SectionHeader title="Your Real Impact" icon="🌱" linkText="Yearly View" />
-        <View style={styles.impactGrid}>
-          <ImpactCard item={IMPACT.co2} />
-          <ImpactCard item={IMPACT.water} />
-          <ImpactCard item={IMPACT.trees} />
-          <ImpactCard item={IMPACT.efficiency} />
-        </View>
+        {/* Badges */}
+        <SectionHeader title="Your Badges" icon="🏅" linkText="View All" />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.badgeScroll}
+        >
+          {BADGES.map((badge) => (
+            <BadgeCard key={badge.id} badge={badge} />
+          ))}
+        </ScrollView>
 
         {/* Tier Progress */}
         <TierProgressCard />
@@ -458,40 +464,44 @@ const styles = StyleSheet.create({
     color: C.primary,
   },
 
-  // Impact Grid
-  impactGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  // Badges
+  badgeScroll: {
     gap: 12,
+    paddingRight: 4,
   },
-  impactCard: {
-    width: '48%',
-    flexGrow: 1,
+  badgeCard: {
+    width: 104,
     backgroundColor: C.card,
     borderRadius: 14,
-    padding: 16,
+    padding: 14,
+    alignItems: 'center',
     gap: 6,
   },
-  impactIcon: {
-    fontSize: 20,
+  badgeCardLocked: {
+    opacity: 0.4,
   },
-  impactValueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+  badgeIcon: {
+    fontSize: 28,
   },
-  impactValue: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: C.text,
-  },
-  impactUnit: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: C.textSecondary,
-  },
-  impactLabel: {
+  badgeLock: {
     fontSize: 12,
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  badgeName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: C.text,
+    textAlign: 'center',
+  },
+  badgeProgress: {
+    fontSize: 11,
     color: C.textSecondary,
+    textAlign: 'center',
+  },
+  badgeCheck: {
+    fontSize: 12,
   },
 
   // Tier Progress
